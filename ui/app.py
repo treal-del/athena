@@ -28,7 +28,6 @@ from ui.components import (
     reports_page,
     export_page,
     settings_page,
-    ai_chat_page,
 )
 
 
@@ -47,7 +46,6 @@ PAGES = {
     "Task Manager": tasks_page,
     "Schedule Planner": schedule_page,
     "Memory": memory_page,
-    "AI Chat": ai_chat_page,
     "Projects": projects_page,
     "Reports": reports_page,
     "Export / Backup": export_page,

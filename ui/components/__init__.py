@@ -1,6 +1,5 @@
 """Streamlit page components for Athena."""
 
-from .ai_chat import chat_page as ai_chat_page
 from .dashboard import dashboard_page
 from .tasks import tasks_page
 from .schedule import schedule_page
@@ -21,5 +20,4 @@ __all__ = [
     "reports_page",
     "export_page",
     "settings_page",
-    "ai_chat_page",
 ]

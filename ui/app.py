@@ -28,6 +28,7 @@ from ui.components import (
     reports_page,
     export_page,
     settings_page,
+    ai_chat_page,
 )
 
 
@@ -46,6 +47,7 @@ PAGES = {
     "Task Manager": tasks_page,
     "Schedule Planner": schedule_page,
     "Memory": memory_page,
+    "AI Chat": ai_chat_page,
     "Projects": projects_page,
     "Reports": reports_page,
     "Export / Backup": export_page,
@@ -74,9 +76,9 @@ def main() -> None:
             st.caption(f"Database path: `{DB_PATH}`")
             st.caption("Data stays on your machine by default.")
         st.markdown(
-            "**v0.1 limitations:** no AI provider configured by default. "
-            "Athena never fakes intelligence. "
-            "All data stays in a local SQLite database."
+            "**v0.2:** AI Chat page with conversational interface, tool "
+            "permissions, and memory context. "
+            "No AI provider configured by default — deterministic responses."
         )
 
     page_fn = PAGES[selection]

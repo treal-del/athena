@@ -65,11 +65,14 @@ def main() -> None:
     with st.sidebar:
         st.title("\u2696\ufe0f Athena")
         st.caption("Personal AI Assistant v0.1 — local-first")
-        st.write(f"Database: `{DB_PATH}`")
+        st.write("Database: Local SQLite")
         st.write(f"Schema version: `{DB_VERSION}`")
         st.divider()
         selection = st.radio("Navigate", list(PAGES.keys()), index=0)
         st.divider()
+        with st.expander("Developer diagnostics", expanded=False):
+            st.caption(f"Database path: `{DB_PATH}`")
+            st.caption("Data stays on your machine by default.")
         st.markdown(
             "**v0.1 limitations:** no AI provider configured by default. "
             "Athena never fakes intelligence. "

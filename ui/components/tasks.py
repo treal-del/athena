@@ -109,7 +109,8 @@ def tasks_page() -> None:
                 st.rerun()
 
             c2.caption(f"Status: {t.status}")
-            c3.caption(f"Priority: {t.priority}")
+            _priority_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}
+            c3.write(f"{_priority_emoji.get(t.priority, '⚪')} {t.priority}")
             c4.caption(f"Due: {t.due_date or '\u2014'}")
 
             meta = []

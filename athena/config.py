@@ -50,7 +50,7 @@ BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 # Schema version
 # ---------------------------------------------------------------------------
 
-DB_VERSION = 1
+DB_VERSION = 2
 
 # ---------------------------------------------------------------------------
 # AI provider configuration (optional)

@@ -9,7 +9,7 @@ from athena.database import connect, get_db_version, init_db, migrate, set_db_ve
 
 def test_schema_version_stored(db_path):
     with connect(db_path) as c:
-        assert get_db_version(c) == 1
+        assert get_db_version(c) == 2
 
 
 def test_required_tables_exist(conn):
@@ -47,7 +47,7 @@ def test_init_db_is_idempotent(db_path):
     init_db(db_path)
     init_db(db_path)
     with connect(db_path) as c:
-        assert get_db_version(c) == 1
+        assert get_db_version(c) == 2
 
 
 def test_set_and_get_db_version(conn):
@@ -56,5 +56,5 @@ def test_set_and_get_db_version(conn):
 
 
 def test_migrate_unknown_version_raises(conn):
-    with pytest.raises(RuntimeError, match="version 2"):
-        migrate(conn, 1, 2)
+    with pytest.raises(RuntimeError, match="version 3"):
+        migrate(conn, 2, 3)

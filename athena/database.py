@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import sqlite3
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 from typing import Iterator, Optional
 
@@ -140,6 +141,19 @@ CREATE INDEX IF NOT EXISTS idx_memories_kind     ON memories(kind);
 CREATE INDEX IF NOT EXISTS idx_memories_approved ON memories(approved);
 CREATE INDEX IF NOT EXISTS idx_memories_created  ON memories(created_at);
 CREATE INDEX IF NOT EXISTS idx_projects_status   ON projects(status);
+
+CREATE TABLE IF NOT EXISTS availability_settings (
+    id                   INTEGER PRIMARY KEY CHECK (id = 1),
+    work_start           TEXT NOT NULL DEFAULT '09:00',
+    work_end             TEXT NOT NULL DEFAULT '17:00',
+    lunch_start          TEXT,
+    lunch_end            TEXT,
+    break_every_minutes  INTEGER NOT NULL DEFAULT 120,
+    break_duration_minutes INTEGER NOT NULL DEFAULT 15,
+    updated_at           TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_availability_settings_id ON availability_settings(id);
 """
 
 
@@ -191,8 +205,37 @@ def _migrate_v1(conn: sqlite3.Connection) -> None:
     return
 
 
+def _migrate_v2(conn: sqlite3.Connection) -> None:
+    """Add availability_settings table for configurable planner availability."""
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS availability_settings (
+            id                   INTEGER PRIMARY KEY CHECK (id = 1),
+            work_start           TEXT NOT NULL DEFAULT '09:00',
+            work_end             TEXT NOT NULL DEFAULT '17:00',
+            lunch_start          TEXT,
+            lunch_end            TEXT,
+            break_every_minutes  INTEGER NOT NULL DEFAULT 120,
+            break_duration_minutes INTEGER NOT NULL DEFAULT 15,
+            updated_at           TEXT NOT NULL
+        )
+        """
+    )
+    conn.execute(
+        """
+        INSERT INTO availability_settings
+            (id, work_start, work_end, lunch_start, lunch_end,
+             break_every_minutes, break_duration_minutes, updated_at)
+        VALUES (1, '09:00', '17:00', '12:00', '13:00', 120, 15, ?)
+        ON CONFLICT(id) DO NOTHING
+        """,
+        (datetime.utcnow().isoformat(),),
+    )
+
+
 _MIGRATIONS = {
     1: _migrate_v1,
+    2: _migrate_v2,
 }
 
 

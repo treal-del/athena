@@ -12,6 +12,7 @@ from datetime import datetime, time
 import streamlit as st
 
 from athena.database import connect
+from athena.domain import setting_service
 from athena.domain import task_service
 from athena.models import FixedCommitment, ScheduleResult
 from athena.planning import Availability, schedule
@@ -92,11 +93,33 @@ def schedule_page() -> None:
 
     # ---- Availability --------------------------------------------------
     st.markdown("### Your availability")
+    st.caption(
+        "Defaults are loaded from Settings. Adjust below for this planning run."
+    )
+
+    conn = connect()
+    try:
+        saved = setting_service.get_availability(conn)
+    finally:
+        conn.close()
+
     colA, colB, colC, colD = st.columns(4)
-    work_start = colA.time_input("Work day starts", value=time(9, 0))
-    work_end = colB.time_input("Work day ends", value=time(17, 0))
-    lunch_start = colC.time_input("Lunch starts", value=time(12, 0))
-    lunch_end = colD.time_input("Lunch ends", value=time(13, 0))
+    work_start = colA.time_input(
+        "Work day starts", value=saved.work_start, key="sched_work_start"
+    )
+    work_end = colB.time_input(
+        "Work day ends", value=saved.work_end, key="sched_work_end"
+    )
+    lunch_start = colC.time_input(
+        "Lunch starts",
+        value=saved.lunch_start or time(12, 0),
+        key="sched_lunch_start",
+    )
+    lunch_end = colD.time_input(
+        "Lunch ends",
+        value=saved.lunch_end or time(13, 0),
+        key="sched_lunch_end",
+    )
 
     availability = Availability(
         work_start=work_start,

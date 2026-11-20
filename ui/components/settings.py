@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-import os
+from datetime import time
 
 import streamlit as st
 
 from athena.config import AI_API_KEY, AI_PROVIDER, DATA_DIR, DB_PATH
+from athena.database import connect
+from athena.domain import setting_service
 
 
 def settings_page() -> None:
@@ -17,6 +19,74 @@ def settings_page() -> None:
     st.markdown("### Database")
     st.write(f"Path: `{DB_PATH}`")
     st.write(f"Data directory: `{DATA_DIR}`")
+
+    st.divider()
+
+    st.markdown("### Planner availability")
+    st.caption(
+        "Configure your work day for the schedule planner. These values are "
+        "saved to your local database and used when building schedules."
+    )
+
+    conn = connect()
+    try:
+        current = setting_service.get_availability(conn)
+    finally:
+        conn.close()
+
+    col1, col2 = st.columns(2)
+    work_start = col1.time_input(
+        "Work day starts", value=current.work_start, key="avail_work_start"
+    )
+    work_end = col2.time_input(
+        "Work day ends", value=current.work_end, key="avail_work_end"
+    )
+
+    col3, col4 = st.columns(2)
+    lunch_start = col3.time_input(
+        "Lunch starts",
+        value=current.lunch_start or time(12, 0),
+        key="avail_lunch_start",
+    )
+    lunch_end = col4.time_input(
+        "Lunch ends",
+        value=current.lunch_end or time(13, 0),
+        key="avail_lunch_end",
+    )
+
+    col5, col6 = st.columns(2)
+    break_every = col5.number_input(
+        "Break every (minutes)",
+        min_value=0,
+        value=current.break_every_minutes,
+        step=15,
+        key="avail_break_every",
+    )
+    break_duration = col6.number_input(
+        "Break duration (minutes)",
+        min_value=0,
+        value=current.break_duration_minutes,
+        step=5,
+        key="avail_break_duration",
+    )
+
+    if st.button("Save availability", type="primary", key="avail_save"):
+        new_settings = setting_service.AvailabilitySettings(
+            work_start=work_start,
+            work_end=work_end,
+            lunch_start=lunch_start,
+            lunch_end=lunch_end,
+            break_every_minutes=int(break_every),
+            break_duration_minutes=int(break_duration),
+        )
+        conn = connect()
+        try:
+            setting_service.save_availability(conn, new_settings)
+            conn.commit()
+        finally:
+            conn.close()
+        st.success("Availability saved.")
+        st.rerun()
 
     st.divider()
 

@@ -235,6 +235,26 @@ def chat_page() -> None:
     else:
         st.session_state.pop("ai_project_tools", None)
 
+
+    # --- Provider status check ---------------------------------------------
+    provider = load_provider()
+    if provider is None:
+        st.warning(
+            "No AI provider is configured yet. "
+            "Click 'Settings' → 'AI Provider' to configure one, or check "
+            "the README for configuration steps."
+        )
+        if "chat_history" not in st.session_state:
+            st.session_state["chat_history"] = []
+        for msg in st.session_state["chat_history"]:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
+        st.chat_input("Ask Athena anything…")
+        return
+
+    # --- Provider status message -------------------------------------------
+    provider_name = provider.provider_name
+    st.info(f"AI provider: `{provider_name}` (deterministic — no model call on v0.1)")
     # --- Provider status message ----------------------------------------
     provider_name = load_provider().provider_name
     st.info(f"AI provider: `{provider_name}` (deterministic — no model call on v0.1)")
@@ -272,6 +292,14 @@ def chat_page() -> None:
 
         # Build tool call list (only approved tools)
         tool_names = _get_tool_choices()
+
+        with st.spinner("Thinking…"):
+            response = provider.chat(
+                [{"role": "user", "content": user_input}],
+                tools=list(TOOLS.values()),
+                tool_permissions=set(tool_names),
+                context_limit=50,
+            )
         with st.spinner("Thinking…"):
             response = load_provider().chat(
                 [{"role": "user", "content": user_input}],

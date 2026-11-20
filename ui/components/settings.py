@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
 from datetime import time
 
 import streamlit as st
@@ -9,6 +11,27 @@ import streamlit as st
 from athena.config import AI_API_KEY, AI_PROVIDER, DATA_DIR, DB_PATH
 from athena.database import connect
 from athena.domain import setting_service
+
+
+def _save_api_key_to_env(api_key: str) -> None:
+    """Save the API key to a local .env file (never in source control)."""
+    env_file = Path(__file__).resolve().parent.parent.parent / ".env"
+    existing = ""
+    if env_file.exists():
+        existing = env_file.read_text(encoding="utf-8")
+    # Preserve existing content but add/override the API key line
+    lines = existing.splitlines(keepends=True) if existing else []
+    new_lines = []
+    found = False
+    for line in lines:
+        if line.startswith("ATHENA_AI_API_KEY="):
+            new_lines.append("ATHENA_AI_API_KEY=" + api_key + "\n")
+            found = True
+        else:
+            new_lines.append(line)
+    if not found:
+        new_lines.append("ATHENA_AI_API_KEY=" + api_key + "\n")
+    env_file.write_text("".join(new_lines), encoding="utf-8")
 
 
 def settings_page() -> None:
@@ -91,17 +114,31 @@ def settings_page() -> None:
     st.divider()
 
     st.markdown("### AI provider")
-    st.write(f"Configured provider: `{AI_PROVIDER or '(none — deterministic mode)'}`")
-    st.write(
-        "API key present: "
-        + ("yes" if AI_API_KEY else "no")
-        + "  (value is never displayed or logged)"
+    st.caption(
+        "Configure the AI provider for the chat interface. The API key is "
+        "stored in a local `.env` file and is never displayed or logged."
     )
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        api_key = st.text_input(
+            "AI API key",
+            type="password",
+            help="Your AI provider API key (e.g., OpenAI, Anthropic, etc.)",
+            key="ai_api_key",
+        )
+    with col2:
+        if st.button("Save API key", type="primary", key="ai_api_key_save"):
+            if not api_key.strip():
+                st.error("API key is required.")
+            else:
+                _save_api_key_to_env(api_key.strip())
+                st.success("API key saved to `.env` file.")
+                st.rerun()
+
     st.info(
         "Athena v0.1 runs without an AI provider. No model calls are made for "
-        "deterministic features, and Athena never fakes intelligence. To add a "
-        "provider, set ATHENA_AI_PROVIDER and ATHENA_AI_API_KEY in your "
-        "environment and implement an athena.ai.AIProvider subclass."
+        "deterministic features. Set `ATHENA_AI_PROVIDER` and `ATHENA_AI_API_KEY` "
+        "in your environment to enable a real provider (see README)."
     )
 
     st.divider()

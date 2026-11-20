@@ -184,6 +184,10 @@ def _get_tool_choices() -> list[ToolDefinition]:
     if st.session_state.get("ai_project_tools"):
         approved.add("create_project")
 
+    # Return only approved tools in sorted order
+    return [TOOLS[name] for name in sorted(approved)]
+
+
 def _build_messages(history: list[dict]) -> list[dict]:
     """Convert Streamlit chat history into the provider's expected format."""
     provider = load_provider()
